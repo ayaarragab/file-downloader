@@ -29,11 +29,9 @@ class DownloadManager:
             max_workers (int): Maximum number of worker threads.
             rate_limit (float, optional): Rate limit for downloads in bytes per second.
         """
-        # Set up the download folder
         self.download_folder = Path(download_folder)
         self.download_folder.mkdir(parents=True, exist_ok=True)
 
-        # Thread pool for managing concurrent downloads
         self.min_workers = min_workers
         self.max_workers = max_workers
         self.executor = ThreadPoolExecutor(
@@ -41,17 +39,13 @@ class DownloadManager:
             thread_name_prefix="Downloader"
         )
 
-        # Priority queue for managing download tasks
         self.queue = PriorityDownloadQueue()
 
-        # Active and completed downloads
         self.active_downloads: Dict[str, Any] = {}
         self.completed_downloads: Dict[str, Any] = {}
 
-        # Rate limiter (optional)
         self.rate_limiter = RateLimiter(rate_limit, int(rate_limit * 2)) if rate_limit else None
 
-        # Initialize specialized downloaders
         self.video_downloader = VideoDownloader(download_folder)
         self.audio_downloader = AudioDownloader(download_folder)
         self.image_downloader = ImageDownloader(download_folder)
@@ -72,7 +66,6 @@ class DownloadManager:
                 if progress_callback:
                     progress_callback(task)
 
-                # Delegate download to specific downloader based on type
                 if url_type == 'video':
                     self.video_downloader.download(url, output_folder)
                 elif url_type == 'audio':
@@ -86,9 +79,8 @@ class DownloadManager:
                     task.status = "failed"
                     return
 
-                # Mark task as completed
                 task.status = "completed"
-                task.downloaded = task.total_size = 100  # Simulating completion progress
+                task.downloaded = task.total_size = 100
                 if progress_callback:
                     progress_callback(task)
                 logging.info(f"Download completed: {url}")
