@@ -190,3 +190,13 @@ class DownloadManager:
                 task.speed for task in self.active_downloads.values()
             ),
         }
+
+    def stop_download(self, url: str) -> None:
+        """Stop an ongoing download by URL."""
+        if url in self.active_downloads:
+            task = self.active_downloads[url]
+            task.status = "stopped"
+            self.active_downloads.pop(url, None)
+            logging.info(f"Download for {url} has been stopped.")
+        else:
+            logging.error(f"No active download found for {url}")

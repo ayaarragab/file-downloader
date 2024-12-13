@@ -22,7 +22,7 @@ def determine_url_type(url: str, prompt_user=None) -> str:
     """Determine the type of the given URL with optional user interaction."""
     try:
         parsed_url = urlparse(url)
-        if "youtube.com" in parsed_url.netloc or "youtu.be" in parsed_url.netloc:
+        if "youtube.com" in parsed_url.netloc or "facebook" or "youtu.be" in parsed_url.netloc:
             if prompt_user:
                 return prompt_user(url)
             return "audio"
