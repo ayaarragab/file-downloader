@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
-from downloader import FileDownloader, DownloadTask, determine_url_type
+from utils.url_utils import determine_url_type
+from core.download_task import DownloadTask
+from managers.download_manager import DownloadManager
 import validators
 
 
@@ -90,7 +92,7 @@ class DownloaderGUI:
     def select_folder(self):
         folder = filedialog.askdirectory()
         if folder:
-            self.downloader = FileDownloader(folder)
+            self.downloader = DownloadManager(folder)
             self.status_var.set(f"Selected download folder: {folder}")
 
     def add_url(self):
@@ -220,4 +222,3 @@ class DownloaderGUI:
 if __name__ == "__main__":
     app = DownloaderGUI()
     app.run()
-
