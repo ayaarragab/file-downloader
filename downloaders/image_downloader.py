@@ -2,7 +2,7 @@ import os
 import requests
 import uuid
 from datetime import datetime
-from base_downloader import BaseDownloader
+from .base_downloader import BaseDownloader
 
 class ImageDownloader(BaseDownloader):
     def download(self, url: str, output_folder: str, file_name: str = ""):

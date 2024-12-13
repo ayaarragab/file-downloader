@@ -1,5 +1,5 @@
 import yt_dlp
-from base_downloader import BaseDownloader
+from .base_downloader import BaseDownloader
 
 class VideoDownloader(BaseDownloader):
     def download(self, url: str, output_folder: str):

@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from download_task import DownloadTask
+from .download_task import DownloadTask
 import threading
 import queue
 

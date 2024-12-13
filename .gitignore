@@ -1,1 +1,7 @@
 commented.py
+/test_download
+/downloaders/__pycache__
+/core/__pycache__
+/managers/__pycache__
+/utils/__pycache__
+/__pycache__
