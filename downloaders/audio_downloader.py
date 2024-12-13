@@ -1,7 +1,10 @@
 import os
+
 import requests
 import yt_dlp
+
 from .base_downloader import BaseDownloader
+
 
 class AudioDownloader(BaseDownloader):
     def download(self, url: str, output_folder: str, use_fallback=True, timeout=30):

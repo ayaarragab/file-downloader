@@ -1,7 +1,9 @@
-from typing import Dict, Optional
-from .download_task import DownloadTask
-import threading
 import queue
+import threading
+from typing import Dict, Optional
+
+from .download_task import DownloadTask
+
 
 class PriorityDownloadQueue:
     """Priority queue for download tasks"""

@@ -1,6 +1,7 @@
 import threading
 from time import time
 
+
 class RateLimiter:
     """Simple token bucket rate limiter"""
 

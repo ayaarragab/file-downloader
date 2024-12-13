@@ -1,10 +1,12 @@
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
 import threading
-from utils.url_utils import determine_url_type
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+
+import validators
+
 from core.download_task import DownloadTask
 from managers.download_manager import DownloadManager
-import validators
+from utils.url_utils import determine_url_type
 
 
 class DownloaderGUI:

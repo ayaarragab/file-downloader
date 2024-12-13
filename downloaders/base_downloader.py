@@ -1,6 +1,7 @@
+import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-import logging
+
 
 class BaseDownloader(ABC):
     def __init__(self, download_folder: str):

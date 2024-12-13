@@ -1,7 +1,10 @@
-import os
 import mimetypes
+import os
+
 import requests
+
 from .base_downloader import BaseDownloader
+
 
 class FileDownloader(BaseDownloader):
     def download(self, url: str, output_folder: str):

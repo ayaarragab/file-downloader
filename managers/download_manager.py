@@ -1,17 +1,18 @@
-from downloaders.video_downloader import VideoDownloader
-from downloaders.audio_downloader import AudioDownloader
-from downloaders.image_downloader import ImageDownloader
-from downloaders.file_downloader import FileDownloader
-from core.priority_queue import PriorityDownloadQueue
-from utils.url_utils import determine_url_type
-from core.download_task import DownloadTask
-from typing import Any, Callable, Dict, Optional
 import logging
 import time
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from core.rate_limiter import RateLimiter
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Callable, Dict, Optional
+
+from core.download_task import DownloadTask
+from core.priority_queue import PriorityDownloadQueue
+from core.rate_limiter import RateLimiter
+from downloaders.audio_downloader import AudioDownloader
+from downloaders.file_downloader import FileDownloader
+from downloaders.image_downloader import ImageDownloader
+from downloaders.video_downloader import VideoDownloader
+from utils.url_utils import determine_url_type
 
 
 class DownloadManager:
@@ -103,7 +104,7 @@ class DownloadManager:
         self.active_downloads[url] = task
         logging.info(f"Queued download: {url} (priority: {priority})")
 
-    def start_downloads(self, progress_callback: Optional[Callable] = None,prompt_user: Optional[Callable] = None) -> None:
+    def start_downloads(self, progress_callback: Optional[Callable] = None, prompt_user: Optional[Callable] = None) -> None:
         """Process download queue with dynamic thread adjustment"""
         try:
             active_futures = []
