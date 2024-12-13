@@ -8,7 +8,7 @@ from core.download_task import DownloadTask
 from typing import Any, Callable, Dict, Optional
 import logging
 import time
-import datetime
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from core.rate_limiter import RateLimiter
 from pathlib import Path
