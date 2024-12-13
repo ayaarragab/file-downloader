@@ -93,6 +93,7 @@ class DownloaderGUI:
 
     def select_folder(self):
         folder = filedialog.askdirectory()
+        print(folder)
         if folder:
             self.downloader = DownloadManager(folder)
             self.status_var.set(f"Selected download folder: {folder}")
