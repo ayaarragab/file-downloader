@@ -16,11 +16,13 @@ from utils.url_utils import determine_url_type
 
 
 class DownloadManager:
-    def __init__(self, 
-                 download_folder: str, 
-                 min_workers: int = 2, 
-                 max_workers: int = 5, 
-                 rate_limit: Optional[float] = None):
+    def __init__(
+        self,
+        download_folder: str,
+        min_workers: int = 2,
+        max_workers: int = 5,
+        rate_limit: Optional[float] = None,
+    ):
         """
         Initialize the Download Manager.
 
@@ -36,8 +38,7 @@ class DownloadManager:
         self.min_workers = min_workers
         self.max_workers = max_workers
         self.executor = ThreadPoolExecutor(
-            max_workers=max_workers,
-            thread_name_prefix="Downloader"
+            max_workers=max_workers, thread_name_prefix="Downloader"
         )
 
         self.queue = PriorityDownloadQueue()
@@ -45,57 +46,64 @@ class DownloadManager:
         self.active_downloads: Dict[str, Any] = {}
         self.completed_downloads: Dict[str, Any] = {}
 
-        self.rate_limiter = RateLimiter(rate_limit, int(rate_limit * 2)) if rate_limit else None
+        self.rate_limiter = (
+            RateLimiter(rate_limit, int(rate_limit * 2)) if rate_limit else None
+        )
 
         self.video_downloader = VideoDownloader(download_folder)
         self.audio_downloader = AudioDownloader(download_folder)
         self.image_downloader = ImageDownloader(download_folder)
         self.file_downloader = FileDownloader(download_folder)
 
-    def download(self, task: DownloadTask, progress_callback: Optional[Callable] = None, prompt_user: Optional[Callable] = None):
-            """Main method to download based on URL type."""
-            task.status = "downloading"
-            logging.info(f"Task {task.url} started downloading at {datetime.now()}")
-            task.start_time = time.time()
+    def download(
+        self,
+        task: DownloadTask,
+        progress_callback: Optional[Callable] = None,
+        prompt_user: Optional[Callable] = None,
+    ):
+        """Main method to download based on URL type."""
+        task.status = "downloading"
+        logging.info(f"Task {task.url} started downloading at {datetime.now()}")
+        task.start_time = time.time()
 
-            try:
-                url = task.url
-                logging.info(f"Attempting to download: {url}")
-                url_type = determine_url_type(url, prompt_user=prompt_user)
-                output_folder = str(self.download_folder)
+        try:
+            url = task.url
+            logging.info(f"Attempting to download: {url}")
+            url_type = determine_url_type(url, prompt_user=prompt_user)
+            output_folder = str(self.download_folder)
 
-                if progress_callback:
-                    progress_callback(task)
+            if progress_callback:
+                progress_callback(task)
 
-                if url_type == 'video':
-                    self.video_downloader.download(url, output_folder)
-                elif url_type == 'audio':
-                    self.audio_downloader.download(url, output_folder)
-                elif url_type == 'image':
-                    self.image_downloader.download(url, output_folder, task.filename)
-                elif url_type == 'file':
-                    self.file_downloader.download(url, output_folder)
-                else:
-                    logging.error(f"Unknown URL type: {url_type}")
-                    task.status = "failed"
-                    return
-
-                task.status = "completed"
-                task.downloaded = task.total_size = 100
-                if progress_callback:
-                    progress_callback(task)
-                logging.info(f"Download completed: {url}")
-
-            except Exception as e:
+            if url_type == "video":
+                self.video_downloader.download(url, output_folder)
+            elif url_type == "audio":
+                self.audio_downloader.download(url, output_folder)
+            elif url_type == "image":
+                self.image_downloader.download(url, output_folder, task.filename)
+            elif url_type == "file":
+                self.file_downloader.download(url, output_folder)
+            else:
+                logging.error(f"Unknown URL type: {url_type}")
                 task.status = "failed"
-                task.error = str(e)
-                if progress_callback:
-                    progress_callback(task)
-                logging.error(f"Failed to download {task.url}: {e}")
+                return
 
-            finally:
-                if task.url in self.active_downloads:
-                    del self.active_downloads[task.url]
+            task.status = "completed"
+            task.downloaded = task.total_size = 100
+            if progress_callback:
+                progress_callback(task)
+            logging.info(f"Download completed: {url}")
+
+        except Exception as e:
+            task.status = "failed"
+            task.error = str(e)
+            if progress_callback:
+                progress_callback(task)
+            logging.error(f"Failed to download {task.url}: {e}")
+
+        finally:
+            if task.url in self.active_downloads:
+                del self.active_downloads[task.url]
 
     def queue_download(self, url: str, filename: str = "", priority: int = 0) -> None:
         """Add a download task to the queue with optional priority"""
@@ -104,30 +112,29 @@ class DownloadManager:
         self.active_downloads[url] = task
         logging.info(f"Queued download: {url} (priority: {priority})")
 
-    def start_downloads(self, progress_callback: Optional[Callable] = None, prompt_user: Optional[Callable] = None) -> None:
+    def start_downloads(
+        self,
+        progress_callback: Optional[Callable] = None,
+        prompt_user: Optional[Callable] = None,
+    ) -> None:
         """Process download queue with dynamic thread adjustment"""
         try:
             active_futures = []
 
             while not self.queue.empty() or active_futures:
-            
+
                 optimal_workers = min(
-                    self.max_workers,
-                    max(self.min_workers, len(active_futures) + 1)
+                    self.max_workers, max(self.min_workers, len(active_futures) + 1)
                 )
 
                 if len(active_futures) < optimal_workers:
                     task = self.queue.get()
                     if task:
                         future = self.executor.submit(
-                            self.download,
-                            task,
-                            progress_callback,
-                            prompt_user
+                            self.download, task, progress_callback, prompt_user
                         )
                         active_futures.append(future)
 
-            
                 done, active_futures = self.wait_for_futures(active_futures)
 
         except Exception as e:
@@ -142,7 +149,7 @@ class DownloadManager:
         for future in futures:
             if future.done():
                 try:
-                    future.result() 
+                    future.result()
                     done.append(future)
                 except Exception as e:
                     logging.error(f"Future failed: {e}")
@@ -181,5 +188,5 @@ class DownloadManager:
             "total_downloaded": total_downloaded,
             "download_speed": sum(
                 task.speed for task in self.active_downloads.values()
-            )
+            ),
         }

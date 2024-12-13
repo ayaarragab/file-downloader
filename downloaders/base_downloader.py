@@ -20,18 +20,17 @@ class BaseDownloader(ABC):
 
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        console.setFormatter(logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
-        ))
-
-
-        file_handler = logging.FileHandler(
-            self.download_folder / 'downloader.log'
+        console.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         )
+
+        file_handler = logging.FileHandler(self.download_folder / "downloader.log")
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s - %(threadName)s - %(levelname)s - %(message)s'
-        ))
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s - %(threadName)s - %(levelname)s - %(message)s"
+            )
+        )
 
         logger.addHandler(console)
         logger.addHandler(file_handler)

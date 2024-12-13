@@ -11,34 +11,36 @@ class AudioDownloader(BaseDownloader):
         os.makedirs(output_folder, exist_ok=True)
 
         ffmpeg_paths = [
-            '/usr/bin/ffmpeg',
-            '/usr/local/bin/ffmpeg',
-            'C:\\Program Files\\FFmpeg\\bin\\ffmpeg.exe',
-            'C:\\Program Files (x86)\\FFmpeg\\bin\\ffmpeg.exe'
+            "/usr/bin/ffmpeg",
+            "/usr/local/bin/ffmpeg",
+            "C:\\Program Files\\FFmpeg\\bin\\ffmpeg.exe",
+            "C:\\Program Files (x86)\\FFmpeg\\bin\\ffmpeg.exe",
         ]
 
         for path in ffmpeg_paths:
             if os.path.exists(path):
-                os.environ['FFMPEG_PATH'] = path
+                os.environ["FFMPEG_PATH"] = path
                 break
 
         try:
-            if 'youtube.com' in url or 'youtu.be' in url:
+            if "youtube.com" in url or "youtu.be" in url:
                 ydl_opts = {
-                    'format': 'bestaudio/best',
-                    'outtmpl': os.path.join(output_folder, '%(title)s.%(ext)s'),
-                    'postprocessors': [{
-                        'key': 'FFmpegExtractAudio',
-                        'preferredcodec': 'mp3',
-                        'preferredquality': '192',
-                    }],
-                    'ffmpeg_location': os.environ.get('FFMPEG_PATH', ''),
+                    "format": "bestaudio/best",
+                    "outtmpl": os.path.join(output_folder, "%(title)s.%(ext)s"),
+                    "postprocessors": [
+                        {
+                            "key": "FFmpegExtractAudio",
+                            "preferredcodec": "mp3",
+                            "preferredquality": "192",
+                        }
+                    ],
+                    "ffmpeg_location": os.environ.get("FFMPEG_PATH", ""),
                 }
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
                     filename = ydl.prepare_filename(info)
-                    mp3_filename = filename.rsplit('.', 1)[0] + '.mp3'
+                    mp3_filename = filename.rsplit(".", 1)[0] + ".mp3"
                     return mp3_filename
 
             if use_fallback:
@@ -46,15 +48,20 @@ class AudioDownloader(BaseDownloader):
                     response = requests.get(url, stream=True, timeout=timeout)
                     response.raise_for_status()
 
-                    content_disposition = response.headers.get('content-disposition')
+                    content_disposition = response.headers.get("content-disposition")
                     if content_disposition:
-                        filename = os.path.basename(content_disposition.split('filename=')[-1].strip('"'))
+                        filename = os.path.basename(
+                            content_disposition.split("filename=")[-1].strip('"')
+                        )
                     else:
-                        filename = os.path.basename(url).split('?')[0] or 'downloaded_audio.mp3'
+                        filename = (
+                            os.path.basename(url).split("?")[0]
+                            or "downloaded_audio.mp3"
+                        )
 
                     filepath = os.path.join(output_folder, filename)
 
-                    with open(filepath, 'wb') as f:
+                    with open(filepath, "wb") as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             f.write(chunk)
 

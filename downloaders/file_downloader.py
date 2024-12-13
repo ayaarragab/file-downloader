@@ -15,7 +15,7 @@ class FileDownloader(BaseDownloader):
 
             file_name = url.split("/")[-1] or "downloaded_file"
             content_type = response.headers.get("Content-Type", "")
-            extension = mimetypes.guess_extension(content_type.split(';')[0]) or ''
+            extension = mimetypes.guess_extension(content_type.split(";")[0]) or ""
 
             if not file_name.endswith(extension):
                 file_name += extension

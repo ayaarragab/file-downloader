@@ -27,7 +27,6 @@ class DownloadTask:
         if not self.chunk_sizes or not self.last_update_time:
             return 0.0
 
-
         recent_chunks = self.chunk_sizes[-5:]
         if not recent_chunks:
             return 0.0
