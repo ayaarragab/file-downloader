@@ -3,23 +3,20 @@ import logging
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, Callable, Dict, Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.parse import urlparse, unquote
-from mimetypes import guess_extension
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
+import mimetypes
 import queue
 import requests
 import time
 import threading
 from datetime import datetime
-import hashlib
 from bs4 import BeautifulSoup
 import yt_dlp
 import uuid
 import mimetypes
-import urllib.parse
 import re
 from urllib.parse import urlparse
-from yt_dlp import YoutubeDL
 
 
 def sanitize_filename(filename):
