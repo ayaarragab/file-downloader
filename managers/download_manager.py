@@ -69,7 +69,12 @@ class DownloadManager:
         try:
             url = task.url
             logging.info(f"Attempting to download: {url}")
-            url_type = determine_url_type(url, prompt_user=prompt_user)
+            url_type = None
+            if task.choice:
+                url_type = task.choice
+                print("I'm here ", url_type)
+            else:
+                determine_url_type(url, prompt_user=prompt_user)
             output_folder = str(self.download_folder)
 
             if progress_callback:
@@ -105,9 +110,9 @@ class DownloadManager:
             if task.url in self.active_downloads:
                 del self.active_downloads[task.url]
 
-    def queue_download(self, url: str, filename: str = "", priority: int = 0) -> None:
+    def queue_download(self, url: str, filename: str = "", priority: int = 0, choice=None) -> None:
         """Add a download task to the queue with optional priority"""
-        task = DownloadTask(url=url, filename=filename, priority=priority)
+        task = DownloadTask(url=url, filename=filename, priority=priority, choice=choice)
         self.queue.put(task)
         self.active_downloads[url] = task
         logging.info(f"Queued download: {url} (priority: {priority})")

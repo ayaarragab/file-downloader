@@ -18,7 +18,7 @@ class DownloadTask:
     chunk_sizes: list[int] = None
     resumable: bool = False
     etag: Optional[str] = None
-
+    choice: str = None
     def __post_init__(self):
         self.chunk_sizes = []
 

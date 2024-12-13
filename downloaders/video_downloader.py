@@ -1,6 +1,6 @@
 import yt_dlp
 
-from base_downloader import BaseDownloader
+from .base_downloader import BaseDownloader
 
 
 class VideoDownloader(BaseDownloader):

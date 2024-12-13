@@ -110,12 +110,12 @@ class DownloaderGUI:
             messagebox.showerror("Error", "Please select a download folder first")
             return
 
-        content_type = prompt_download_choice(self.root, url)
-        if not content_type:
+        choice = prompt_download_choice(self.root, url)
+        if not choice:
             return
-
-        self.downloader.queue_download(url, content_type)
-        self.create_download_entry(self.scrollable_frame, url, content_type)
+        print(choice)
+        self.downloader.queue_download(url, choice=choice)
+        self.create_download_entry(self.scrollable_frame, url, choice)
 
         self.url_var.set('')
 
