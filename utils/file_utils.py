@@ -12,4 +12,4 @@ def sanitize_filename(filename):
     """
     sanitized = re.sub(r'[<>:"/\\|?*]', '', filename)
     sanitized = sanitized[:255]
-    return sanitized.strip() or 'downloaded_audio'
+    return sanitized.strip() or 'downloaded_audio' 
