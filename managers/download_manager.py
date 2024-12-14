@@ -1,5 +1,6 @@
 import logging
 import time
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +55,8 @@ class DownloadManager:
         self.audio_downloader = AudioDownloader(download_folder)
         self.image_downloader = ImageDownloader(download_folder)
         self.file_downloader = FileDownloader(download_folder)
+        self.cancellation_events: Dict[str, threading.Event] = {}
+
 
     def download(
         self,
@@ -62,6 +65,9 @@ class DownloadManager:
         prompt_user: Optional[Callable] = None,
     ):
         """Main method to download based on URL type."""
+        cancellation_event = threading.Event()
+        self.cancellation_events[task.url] = cancellation_event
+        logging.info("It is adedddeded")
         task.status = "downloading"
         logging.info(f"Task {task.url} started downloading at {datetime.now()}")
         task.start_time = time.time()
@@ -72,7 +78,6 @@ class DownloadManager:
             url_type = None
             if task.choice:
                 url_type = task.choice
-                print("I'm here ", url_type)
             else:
                 determine_url_type(url, prompt_user=prompt_user)
             output_folder = str(self.download_folder)
@@ -81,34 +86,42 @@ class DownloadManager:
                 progress_callback(task)
 
             if url_type == "video":
-                self.video_downloader.download(url, output_folder)
+                self.video_downloader.download(url, output_folder, cancellation_event)
             elif url_type == "audio":
-                self.audio_downloader.download(url, output_folder)
+                self.audio_downloader.download(url, output_folder, cancellation_event)
             elif url_type == "image":
-                self.image_downloader.download(url, output_folder, task.filename)
-            elif url_type == "file":
-                self.file_downloader.download(url, output_folder)
+                self.image_downloader.download(url, output_folder, task.filename, cancellation_event)
+            elif url_type == "pdf":
+                self.file_downloader.download(url, output_folder, cancellation_event)
             else:
                 logging.error(f"Unknown URL type: {url_type}")
                 task.status = "failed"
                 return
-
-            task.status = "completed"
-            task.downloaded = task.total_size = 100
-            if progress_callback:
-                progress_callback(task)
-            logging.info(f"Download completed: {url}")
+            
+            if cancellation_event.is_set():
+                task.status = "stopped"
+                logging.info(f"Download cancelled: {url}")
+            else:
+                task.status = "completed"
+                task.downloaded = task.total_size = 100
+                if progress_callback:
+                    progress_callback(task)
+                logging.info(f"Download completed: {url}")
 
         except Exception as e:
-            task.status = "failed"
-            task.error = str(e)
-            if progress_callback:
-                progress_callback(task)
-            logging.error(f"Failed to download {task.url}: {e}")
+            if not cancellation_event.is_set():
+                task.status = "failed"
+                task.error = str(e)
+                if progress_callback:
+                    progress_callback(task)
+                logging.error(f"Failed to download {task.url}: {e}")
 
         finally:
             if task.url in self.active_downloads:
                 del self.active_downloads[task.url]
+            
+            if task.url in self.cancellation_events:
+                del self.cancellation_events[task.url]
 
     def queue_download(self, url: str, filename: str = "", priority: int = 0, choice=None) -> None:
         """Add a download task to the queue with optional priority"""
@@ -200,6 +213,10 @@ class DownloadManager:
         """Stop an ongoing download by URL."""
         if url in self.active_downloads:
             task = self.active_downloads[url]
+            
+            if url in self.cancellation_events:
+                self.cancellation_events[url].set()
+            
             task.status = "stopped"
             self.active_downloads.pop(url, None)
             logging.info(f"Download for {url} has been stopped.")

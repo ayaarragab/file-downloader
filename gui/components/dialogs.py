@@ -3,14 +3,14 @@ from tkinter import ttk
 
 def prompt_download_choice(root, url):
     """
-    Display a dialog for the user to choose the download format (Video or Audio).
+    Display a dialog for the user to choose the download format (Video, Audio, PDF, or Image).
 
     Args:
         root (tk.Tk): The main application window.
         url (str): The URL for which the download choice is being made.
 
     Returns:
-        str: The chosen format ('video' or 'audio').
+        str: The chosen format ('video', 'audio', 'pdf', or 'image').
     """
     choice = tk.StringVar(value="video")  # Default choice is 'video'
 
@@ -20,7 +20,7 @@ def prompt_download_choice(root, url):
     # Create a modal dialog window
     dialog = tk.Toplevel(root)
     dialog.title("Download Choice")
-    dialog.geometry("450x250")
+    dialog.geometry("450x300")
     dialog.resizable(False, False)
 
     # Center the dialog relative to the parent window
@@ -38,6 +38,12 @@ def prompt_download_choice(root, url):
 
     radio_audio = ttk.Radiobutton(dialog_frame, text="Audio", variable=choice, value="audio")
     radio_audio.pack(anchor=tk.W, pady=5)
+
+    radio_pdf = ttk.Radiobutton(dialog_frame, text="PDF", variable=choice, value="pdf")
+    radio_pdf.pack(anchor=tk.W, pady=5)
+
+    radio_image = ttk.Radiobutton(dialog_frame, text="Image", variable=choice, value="image")
+    radio_image.pack(anchor=tk.W, pady=5)
 
     confirm_button = ttk.Button(dialog_frame, text="Confirm", command=confirm_choice)
     confirm_button.pack(pady=(20, 10))

@@ -113,7 +113,6 @@ class DownloaderGUI:
         choice = prompt_download_choice(self.root, url)
         if not choice:
             return
-        print(choice)
         self.downloader.queue_download(url, choice=choice)
         self.create_download_entry(self.scrollable_frame, url, choice)
 

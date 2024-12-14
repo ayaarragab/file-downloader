@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 class BaseDownloader(ABC):
-    def __init__(self, download_folder: str):
+    def __init__(self, download_folder: str, cancellation_event=None):
         self.download_folder = Path(download_folder)
         self.download_folder.mkdir(parents=True, exist_ok=True)
         self._setup_logging()
