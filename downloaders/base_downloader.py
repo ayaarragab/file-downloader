@@ -7,7 +7,7 @@ class BaseDownloader(ABC):
     def __init__(self, download_folder: str):
         self.download_folder = Path(download_folder)
         self.download_folder.mkdir(parents=True, exist_ok=True)
-
+        self._setup_logging()
     @abstractmethod
     def download(self, *args, **kwargs):
         """Abstract method for downloading files."""
