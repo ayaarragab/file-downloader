@@ -9,9 +9,9 @@ class VideoDownloader(BaseDownloader):
             if cancellation_event is None:
                 cancellation_event = threading.Event()
             
-            def progress_hook(a):
+            def progress_hook(d):
                 if cancellation_event.is_set():
-                    logging.info("Download stopped by user")
+                    raise yt_dlp.utils.DownloadCancelled("Download stopped by user")
 
             ydl_opts = {
                 'format': 'best',
@@ -26,8 +26,8 @@ class VideoDownloader(BaseDownloader):
                 if cancellation_event.is_set():
                     logging.info("Download cancelled before starting")
                     return
-                
-                ydl.download([url])
+                if not cancellation_event.is_set():
+                    ydl.download([url])
             
             logging.info(f"Video downloaded successfully to {output_folder}")
         except yt_dlp.utils.DownloadCancelled:

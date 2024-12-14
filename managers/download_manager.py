@@ -84,7 +84,6 @@ class DownloadManager:
 
             if progress_callback:
                 progress_callback(task)
-
             if url_type == "video":
                 self.video_downloader.download(url, output_folder, cancellation_event)
             elif url_type == "audio":
@@ -210,15 +209,29 @@ class DownloadManager:
         }
 
     def stop_download(self, url: str) -> None:
-        """Stop an ongoing download by URL."""
-        if url in self.active_downloads:
-            task = self.active_downloads[url]
+        matching_task = next((task for task in self.active_downloads.values() if task.url == url), None)
+        
+        if matching_task:
+            url_to_stop = matching_task.url
             
-            if url in self.cancellation_events:
-                self.cancellation_events[url].set()
+            if url_to_stop in self.cancellation_events:
+                self.cancellation_events[url_to_stop].set()
             
-            task.status = "stopped"
-            self.active_downloads.pop(url, None)
-            logging.info(f"Download for {url} has been stopped.")
+            matching_task.status = "stopped"
+            self.active_downloads.pop(url_to_stop, None)
+            logging.info(f"Download for {url_to_stop} has been stopped.")
         else:
-            logging.error(f"No active download found for {url}")
+            matching_task = next((task for task in self.active_downloads.values() 
+                                if url in task.url or task.url in url), None)
+            
+            if matching_task:
+                url_to_stop = matching_task.url
+                
+                if url_to_stop in self.cancellation_events:
+                    self.cancellation_events[url_to_stop].set()
+                
+                matching_task.status = "stopped"
+                self.active_downloads.pop(url_to_stop, None)
+                logging.info(f"Download for {url_to_stop} has been stopped.")
+            else:
+                logging.error(f"No active download found for {url}")
