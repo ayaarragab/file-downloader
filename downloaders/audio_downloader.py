@@ -2,7 +2,6 @@ import threading
 import yt_dlp
 import os
 import logging
-import requests
 import time
 from .base_downloader import BaseDownloader
 
