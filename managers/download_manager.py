@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
-
 from core.download_task import DownloadTask
 from core.priority_queue import PriorityDownloadQueue
 from core.rate_limiter import RateLimiter
@@ -235,3 +234,4 @@ class DownloadManager:
                 logging.info(f"Download for {url_to_stop} has been stopped.")
             else:
                 logging.error(f"No active download found for {url}")
+

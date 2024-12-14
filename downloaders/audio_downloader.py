@@ -1,33 +1,61 @@
+import threading
+import yt_dlp
 import os
 import logging
 import requests
-import yt_dlp
-import threading
-
+import time
 from .base_downloader import BaseDownloader
 
-
 class AudioDownloader(BaseDownloader):
-    def download(self, url: str, output_folder: str, use_fallback=True, timeout=30, cancellation_event=None):
+    def download(self, url: str, output_folder: str, cancellation_event: threading.Event = None):
+        # Create a flag to track download progress
+        download_started = threading.Event()
+        download_completed = threading.Event()
+        
+        # Ensure we have a cancellation event
         if cancellation_event is None:
-                cancellation_event = threading.Event()
-        os.makedirs(output_folder, exist_ok=True)
-        if cancellation_event.is_set():
-                logging.info("Audio File download stopped before starting")
-                return None
-        ffmpeg_paths = [
-            "/usr/bin/ffmpeg",
-            "/usr/local/bin/ffmpeg",
-            "C:\\Program Files\\FFmpeg\\bin\\ffmpeg.exe",
-            "C:\\Program Files (x86)\\FFmpeg\\bin\\ffmpeg.exe",
-        ]
+            cancellation_event = threading.Event()
 
-        for path in ffmpeg_paths:
-            if os.path.exists(path):
-                os.environ["FFMPEG_PATH"] = path
-                break
+        # Create a more aggressive cancellation thread
+        def cancellation_monitor():
+            while not download_completed.is_set():
+                if cancellation_event.is_set():
+                    logging.info(f"Cancellation requested for {url}")
+                    
+                    # If download has started but not completed, interrupt
+                    if download_started.is_set() and not download_completed.is_set():
+                        # Attempt to interrupt the download more aggressively
+                        yt_dlp.utils.std_headers['User-Agent'] = 'Cancel-Download-Request'
+                        break
+                
+                time.sleep(0.1)  # Prevent busy waiting
+        
+        # Monitoring thread for cancellation
+        monitor_thread = threading.Thread(target=cancellation_monitor)
+        monitor_thread.daemon = True
+        monitor_thread.start()
 
         try:
+            os.makedirs(output_folder, exist_ok=True)
+            
+            if cancellation_event.is_set():
+                logging.info("Audio File download stopped before starting")
+                return None
+
+            # Paths to check for ffmpeg
+            ffmpeg_paths = [
+                "/usr/bin/ffmpeg",
+                "/usr/local/bin/ffmpeg",
+                "C:\\Program Files\\FFmpeg\\bin\\ffmpeg.exe",
+                "C:\\Program Files (x86)\\FFmpeg\\bin\\ffmpeg.exe",
+            ]
+
+            for path in ffmpeg_paths:
+                if os.path.exists(path):
+                    os.environ["FFMPEG_PATH"] = path
+                    break
+
+            # YouTube download specific handling
             if "youtube.com" in url or "youtu.be" in url:
                 ydl_opts = {
                     "format": "bestaudio/best",
@@ -40,47 +68,65 @@ class AudioDownloader(BaseDownloader):
                         }
                     ],
                     "ffmpeg_location": os.environ.get("FFMPEG_PATH", ""),
+                    'no_warnings': True,
+                    'quiet': True,
+                    'no_color': True,
+                    'no_progress': True
                 }
 
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    filename = ydl.prepare_filename(info)
-                    mp3_filename = filename.rsplit(".", 1)[0] + ".mp3"
-                    return mp3_filename
+                # Progress hook to track download and check cancellation
+                def progress_hook(d):
+                    # Mark that download has started
+                    download_started.set()
+                    
+                    # Check if cancellation was requested
+                    if cancellation_event.is_set():
+                        logging.info("Cancellation detected in progress hook")
+                        raise yt_dlp.utils.DownloadCancelled("Download manually stopped")
+                
+                ydl_opts['progress_hooks'] = [progress_hook]
 
-            if use_fallback:
                 try:
-                    response = requests.get(url, stream=True, timeout=timeout)
-                    response.raise_for_status()
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        if cancellation_event.is_set():
+                            logging.info("Audio download cancelled before yt-dlp started.")
+                            return None
+                        
+                        # Actual download attempt
+                        try:
+                            info = ydl.download([url])
+                            
+                            # Mark download as completed
+                            download_completed.set()
+                            
+                            # If download completes, prepare filename
+                            if info and len(info) > 0:
+                                filename = ydl.prepare_filename(info[0])
+                                mp3_filename = filename.rsplit(".", 1)[0] + ".mp3"
+                                
+                                # Final check before returning filename
+                                if cancellation_event.is_set():
+                                    # Remove the file if it was created
+                                    if os.path.exists(mp3_filename):
+                                        os.remove(mp3_filename)
+                                    return None
+                                
+                                return mp3_filename
+                        
+                        except yt_dlp.utils.DownloadCancelled:
+                            logging.info("Download was manually cancelled")
+                            return None
 
-                    content_disposition = response.headers.get("content-disposition")
-                    if content_disposition:
-                        filename = os.path.basename(
-                            content_disposition.split("filename=")[-1].strip('"')
-                        )
-                    else:
-                        filename = (
-                            os.path.basename(url).split("?")[0]
-                            or "downloaded_audio.mp3"
-                        )
-
-                    filepath = os.path.join(output_folder, filename)
-
-                    with open(filepath, "wb") as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if cancellation_event.is_set():
-                                f.close()
-                                os.remove(filepath)
-                                logging.info("Audio File download stopped")
-                                return None
-                            f.write(chunk)
-
-                    return filepath
-
-                except requests.RequestException as e:
-                    print(f"Fallback download failed: {e}")
+                except Exception as e:
+                    logging.error(f"YouTube download error: {e}")
                     return None
 
-        except Exception as e:
-            print(f"Audio download error: {e}")
+            # Fallback download method for non-YouTube sources
             return None
+
+        except Exception as e:
+            logging.error(f"Unexpected error in AudioDownloader: {e}")
+            return None
+        finally:
+            # Ensure download_completed is set to allow monitor thread to exit
+            download_completed.set()
