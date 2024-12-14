@@ -60,20 +60,6 @@ class DownloaderGUI:
                                        style='Primary.TButton')
         select_folder_btn.pack(fill=tk.X, pady=5)
 
-        pause_all_btn = ttk.Button(button_frame, text="Pause All",
-                                   command=self.pause_all,
-                                   style='Secondary.TButton')
-        pause_all_btn.pack(fill=tk.X, pady=5)
-
-        resume_all_btn = ttk.Button(button_frame, text="Resume All",
-                                    command=self.resume_all,
-                                    style='Primary.TButton')
-        resume_all_btn.pack(fill=tk.X, pady=5)
-
-        clear_completed_btn = ttk.Button(button_frame, text="Clear Completed",
-                                         command=self.clear_completed,
-                                         style='Secondary.TButton')
-        clear_completed_btn.pack(fill=tk.X, pady=5)
 
         exit_btn = ttk.Button(button_frame, text="Exit",
                               command=self.root.quit,
@@ -140,20 +126,6 @@ class DownloaderGUI:
                 task_info['pause_btn'].pack_forget()
                 task_info['stop_btn'].pack_forget()
 
-    def pause_all(self):
-        if not self.downloader:
-            messagebox.showerror("Error", "No downloads to pause")
-            return
-        for url in list(self.download_tasks.keys()):
-            self.downloader.pause_download(url)
-
-    def resume_all(self):
-        if not self.downloader:
-            messagebox.showerror("Error", "No downloads to resume")
-            return
-        for url in self.download_tasks.keys():
-            self.downloader.resume_download(url)
-
     def clear_completed(self):
         for url, task in list(self.download_tasks.items()):
             if task['progress']['value'] == 100:
@@ -181,18 +153,12 @@ class DownloaderGUI:
             style='Danger.TButton')
         stop_btn.pack(side=tk.LEFT, padx=5)
 
-        # Pause button
-        pause_btn = ttk.Button(frame, text="Pause",
-            command=lambda: self.pause_download(url),
-            style='Secondary.TButton')
-        pause_btn.pack(side=tk.LEFT, padx=5)
 
         self.download_tasks[url] = {
             'frame': frame,
             'progress': progress,
             'progress_label': progress_label,
             'stop_btn': stop_btn,
-            'pause_btn': pause_btn,
             'content_type': content_type
         }
 

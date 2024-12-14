@@ -175,20 +175,6 @@ class DownloadManager:
 
         return done, still_active
 
-    def pause_download(self, url: str) -> None:
-        """Pause a download by removing it from active downloads"""
-        if url in self.active_downloads:
-            task = self.active_downloads[url]
-            task.status = "paused"
-            self.queue.remove(url)
-
-    def resume_download(self, url: str) -> None:
-        """Resume a paused download"""
-        if url in self.active_downloads:
-            task = self.active_downloads[url]
-            if task.status == "paused":
-                task.status = "pending"
-                self.queue.put(task)
 
     def get_download_stats(self) -> Dict[str, Any]:
         """Get current download statistics"""
@@ -234,4 +220,3 @@ class DownloadManager:
                 logging.info(f"Download for {url_to_stop} has been stopped.")
             else:
                 logging.error(f"No active download found for {url}")
-
