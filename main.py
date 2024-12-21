@@ -1,6 +1,6 @@
 from gui.main_window import DownloaderGUI
+import threading
 
 if __name__ == "__main__":
-    app = DownloaderGUI()
-    app.run()
-
+    main_thread = threading.Thread(target=DownloaderGUI().run())
+    main_thread.start()
